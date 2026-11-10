@@ -2,19 +2,7 @@
 
 ## Publishing
 
-The first version (commit `6570b06`) is public at https://github.com/chad416/alternator-transient-performance, and its GitHub Actions run passed. The next commit (end-ring referral D18, skew D19, redesign screen D20, PDF fixes) passed the same steps from a fresh local clone and is ready to push. The repository topics are not set yet. From this folder:
-
-```bash
-git push origin main
-```
-
-```bash
-gh repo edit chad416/alternator-transient-performance --add-topic synchronous-generator,femm,iso-8528,ieee-421-5,systems-engineering,power-systems,python
-```
-
-```bash
-gh run watch --repo chad416/alternator-transient-performance
-```
+Public at https://github.com/chad416/alternator-transient-performance since 10 Nov 2026, with topics set. GitHub Actions passed on both commits: the first version (run 42764971491) and the end-ring, skew and redesign-screen update (run 42767287185).
 
 ## Engineering items still open
 - **FEMM run of the redesign variant.** The redesign screen (DOSSIER §8.6) finds that only an 8 mm air gap with 50 mm slots meets SR-05, by 0.1 points. That geometry needs its own FEMM run (about 90 min), a field coil that fits between the poles for 28 % more field current (D8), and a resized exciter. Only then can it be scored against A5.
