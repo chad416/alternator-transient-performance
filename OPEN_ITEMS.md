@@ -2,7 +2,7 @@
 
 ## Publishing
 
-Public at https://github.com/chad416/alternator-transient-performance since 10 Nov 2026, with topics set. GitHub Actions passed on both commits: the first version (run 42764971491) and the end-ring, skew and redesign-screen update (run 42767287185).
+Public at https://github.com/chad416/alternator-transient-performance since 10 Nov 2026, with topics set. GitHub Actions passed on every pushed commit: the first version (run 42764971491), the end-ring, skew and redesign-screen update (run 42767287185), and the FEMM run of the redesign variant (527b951, run 42909938892).
 
 ## Engineering items still open
 - **Measured T''d.** The SR-01 pass (0.05 points) depends on the end-ring resistance, which is referred analytically (D18). A sudden-short-circuit test (IEC 60034-4-1) is the first test to run.
