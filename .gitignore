@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+femm/out/*.fem
+femm/out/*.ans
+results/*.log
+PROGRESS.md
+OPEN_ITEMS_private.md
+*_print.html
+results/aoa_quick.json

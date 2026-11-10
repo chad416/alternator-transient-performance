@@ -1,0 +1,30 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Model verification tests
+        run: python -m pytest -q
+      - name: Re-reduce the cached FEMM results (FEMM itself is Windows-only and is not run in CI)
+        run: |
+          if [ -f femm/out/occ.csv ]; then python femm/reduce.py; else echo "no cached FEMM results"; fi
+      - name: Quick trade-study run and checks on its output
+        run: |
+          python -m scripts.run_aoa --quick
+          python - <<'PY'
+          import json
+          d = json.load(open("results/aoa_quick.json"))
+          r = d["results"]
+          assert set(r) == {"A0", "A1", "A2", "A3", "A4", "A5"}
+          # physics checks that must hold whatever the tuning: shunt collapses on a fault, PMG sustains it
+          assert r["A1"]["sc"]["i_at_1s_pu"] < 1.0 and r["A3"]["sc"]["i_at_1s_pu"] > 2.5
+          # the next frame has the lower reactance and must give the shallower block-load dip
+          assert r["A4"]["bl100"]["du_dyn_minus_pct"] > r["A1"]["bl100"]["du_dyn_minus_pct"]
+          print("quick AoA checks passed")
+          PY

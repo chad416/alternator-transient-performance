@@ -1,0 +1,58 @@
+# Design alternatives for the trade study (DOSSIER.md §8). Overrides apply on top of machine.yaml / plant.yaml.
+# cost: relative alternator ex-works cost index (A0 = 1.00); risk and integration scores 1-10 (10 best).
+# [D] derived in this study, [A] assumed; all [A] scores are varied in the weight/score sensitivity.
+A0:
+  name: Baseline (shunt AVR, textbook PID)
+  tune: false
+  exc: {}
+  machine: base
+  cost: 1.00        # [A] reference
+  risk: 9           # [A] as delivered
+  integration: 10   # [A] reference size
+A1:
+  name: AVR retuned (shunt)
+  tune: true
+  exc: {}
+  machine: base
+  cost: 1.005       # [A] engineering + test time only
+  risk: 8           # [A] needs a validated tuning procedure
+  integration: 10
+A2:
+  name: Larger exciter + retune
+  tune: true
+  exc: {kc: 0.10, vrmax: 21.0, te: 0.32, ve1: 9.0, ve2: 6.75}   # [A] 1.5x exciter: same AVR current gives 1.5x VE
+  machine: base
+  cost: 1.04        # [A] exciter ~ 3-5 % of alternator material
+  risk: 8
+  integration: 9    # [A] slightly longer exciter
+A3:
+  name: PMG excitation + retune
+  tune: true
+  exc: {supply: pmg}
+  machine: base
+  cost: 1.06        # [A] PMG + PMG-type AVR
+  risk: 8           # [A] one more rotating component, but supply survives faults
+  integration: 8    # [A] adds axial length
+A4:
+  name: Next frame (oversized) + retune
+  tune: true
+  exc: {}
+  machine: frame_up
+  cost: 1.25        # [D] active volume ratio 1.25 (machine_frame_up vs base), material-cost proxy
+  risk: 9           # [A] standard catalogue practice
+  integration: 6    # [A] larger and heavier frame
+A5:
+  name: Next frame + PMG + retune
+  tune: true
+  exc: {supply: pmg}
+  machine: frame_up
+  cost: 1.31        # [D]+[A]
+  risk: 8
+  integration: 5
+
+machines:
+  frame_up:          # next frame designed with the same method (bta/design.py), rated 1000 kVA, run at 800 kVA
+    rating: {s_kva: 1000.0}
+    stator: {slots: 60, coil_pitch_slots: 10, turns_per_coil: 2, d_bore: 0.56, l_core: 0.49, d_out: 0.86, slot_width: 0.0125}
+    rotor: {pole_body_width: 0.17, hub_radius: 0.16}
+    h_extra_s: 0.05  # [A] larger rotor adds inertia on the 800 kVA base

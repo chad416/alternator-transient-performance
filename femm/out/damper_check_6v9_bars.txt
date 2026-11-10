@@ -1,0 +1,18 @@
+# Quick FEMM check, 10 Nov 2026 01:4x: 2-D phase-A inductance (no end leakage), 5 % rated current, linear iron
+# bars_per_pole, bar circuit, axis, f (Hz), L
+6 D d 0.01 L=1.3183 mH 54s
+6 D d 100.0 L=0.5313 mH 54s
+6 D q 0.01 L=0.6059 mH 56s
+6 D q 100.0 L=0.5475 mH 61s
+6 <None> d 0.01 L=1.3183 mH 51s
+6 <None> d 100.0 L=0.5313 mH 41s
+6 <None> q 0.01 L=0.6058 mH 44s
+6 <None> q 100.0 L=0.0952 mH 44s
+9 D d 0.01 L=1.3175 mH 85s
+9 D d 100.0 L=0.1899 mH 68s
+9 D q 0.01 L=0.6046 mH 81s
+9 D q 100.0 L=0.3879 mH 68s
+9 <None> d 0.01 L=1.3175 mH 80s
+9 <None> d 100.0 L=0.1899 mH 66s
+9 <None> q 0.01 L=0.6045 mH 78s
+9 <None> q 100.0 L=0.0776 mH 62s

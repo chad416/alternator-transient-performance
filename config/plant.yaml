@@ -1,0 +1,66 @@
+# Excitation system, prime mover, loads and requirement limits for the transient study.
+# Each value is marked: [S] sourced (see DOSSIER.md references), [D] derived in this study, [A] assumed
+# (typical order of magnitude; every [A] value that matters is swept in the sensitivity study).
+
+excitation:
+  model: AC8B            # IEEE Std 421.5-2016 AC8B structure (PID AVR + brushless exciter + FEX) [S]
+  supply: shunt          # shunt | pmg  -- shunt: regulator ceiling scales with terminal voltage [D]
+  tr: 0.01               # voltage transducer time constant, s [A]
+  kp: 4.0                # PID gains in pu exciter-field voltage per pu voltage error [A, baseline "as delivered"]
+  ki: 4.0
+  kd: 0.4
+  td: 0.02
+  ka: 1.0
+  ta: 0.005
+  vrmax: 14.0            # regulator ceiling, pu of VR, at 1 pu supply [D]: AVR forcing current 6 A [A] over the
+                         # 0.75 A no-load exciter-field current of the sister bench frame (VR = 1.78 at no load)
+  vrmin: 0.0             # single-quadrant (half-controlled) AVR output stage [A]
+  te: 0.25               # exciter field time constant, s [A]
+  ke: 1.0                # [S convention: self-excited exciters only use KE<1]
+  kc: 0.15               # rectifier loading factor (commutating reactance) [A]
+  kdx: 0.6               # exciter demagnetising factor KD (named kdx to avoid clash with PID kd) [A]
+  ve1: 6.0               # exciter saturation points (VE, SE) [A]
+  se1: 0.30
+  ve2: 4.5
+  se2: 0.10
+
+governor:
+  droop: 0.03            # speed droop, pu speed per pu power [A, inside the G3 limit of the frequency droop]
+  kp: 12.0               # PI governor [A]
+  ki: 6.0
+  t_act: 0.05            # actuator lag, s [A]
+  t_eng: 0.08            # combustion/firing delay lumped as a lag, s [A]
+  fuel_max: 1.10         # pu torque
+  f_na: 0.55             # fuel limit with no boost (turbo lag model) [A]
+  t_boost: 1.5           # turbocharger boost time constant, s [A]
+  damping: 0.0
+
+motor:
+  # Typical 4-pole 400 V cage motor, pu on its own kVA base [A]; deep-bar effect via Rr(s)
+  rs: 0.010
+  xs: 0.080
+  xm: 3.000
+  xr: 0.080
+  rr_run: 0.012
+  rr_lr: 0.050
+  h: 0.6                 # motor + driven load inertia, s
+  load_type: quadratic   # pump/fan: T = t_rated * (t0 + (1 - t0) * w^2)
+  t0: 0.05
+  pf_rated: 0.88
+  eff_rated: 0.95
+
+limits:
+  # ISO 8528-5 performance class G3 operating limit values (ISO 8528-5:2018 cl. 15 / :2022 Table 4, as reproduced
+  # in two manufacturer white papers, refs [S5][S6] in DOSSIER.md) [S]
+  du_dyn_minus_pct: -15.0   # transient voltage deviation, load increase
+  du_dyn_plus_pct: 20.0     # transient voltage deviation, 100 % load decrease
+  t_u_rec_s: 4.0            # voltage recovery time
+  du_band_pct: 1.0          # recovery band: +-dU_st (band width 2*dU_st, ISO 8528-3:1993 8.8 default) [S, edition caveat]
+  df_dyn_minus_pct: -7.0    # diesel
+  df_dyn_plus_pct: 10.0
+  t_f_rec_s: 3.0
+  df_band_pct: 1.0          # frequency recovery band 2 % for G3 (taken as +-1 %) [S, interpretation]
+  # Motor starting is not limited by ISO 8528-5 (no clause; G4 = by agreement). Practice value [S8][S9]:
+  du_motor_start_pct: -20.0
+  # Sustained three-phase short-circuit current, pu, for selective protection (typical data-sheet value) [A]
+  i_sc_sustained_pu: 3.0
