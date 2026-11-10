@@ -209,6 +209,7 @@ class Design:
         seg = math.pi * d_ring / q_eq
         r_ring = rho_cu * seg / (dmp["end_ring_area_mm2"] * 1e-6)
         r_bar_eq = r_bar + r_ring / (2 * math.sin(math.pi * p / q_eq) ** 2)
+        o["k_ring"] = r_bar_eq / r_bar            # used by femm/reduce.py: FEMM bars have ideal rings (D17, D18)
         lam_bar = 0.623 + dmp["bar_depth"] / dmp["bar_slot_open"]   # round bar + slot bridge (Pyrhönen ch. 4)
         l_bar = MU0 * L * lam_bar
         o["rD_d"] = ref * r_bar_eq * o["kd"]

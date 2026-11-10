@@ -129,7 +129,24 @@ def t_femm(pf):
             f"| SSFR low-frequency limit vs static solve (linear μr 2000 vs M-19 B-H), d / q | "
             f"{f(100*(pf['ssfr']['d_field_open']['L0']/s['ld']-1),1)} % / {f(100*(pf['ssfr']['q']['L0']/s['lq']-1),1)} % |\n"
             f"| X''d: damper only (field open) / with field branch | {f(pf['pu']['xdpp_field_open'],3)} / {f(pf['pu']['xdpp'],3)} |\n"
-            f"| T''d / T''do (circuit) | {f(pf['pu']['td_pp']*1e3,1)} ms / {f(pf['pu']['tdo_pp']*1e3,1)} ms |")
+            f"| End-ring factor k_ring on the damper resistance (D18, ring {f(pf['end_ring']['end_ring_area_mm2'],0)} mm²) | {f(pf['end_ring']['k_ring'],3)} |\n"
+            f"| T''d / T''do: ideal FEMM ring → with end ring | {f(pf['end_ring']['ideal_ring']['td_pp']*1e3,1)} / {f(pf['end_ring']['ideal_ring']['tdo_pp']*1e3,1)} ms → "
+            f"{f(pf['pu']['td_pp']*1e3,1)} / {f(pf['pu']['tdo_pp']*1e3,1)} ms |\n"
+            f"| T''qo: ideal ring → with end ring | {f(pf['end_ring']['ideal_ring']['tqo_pp']*1e3,1)} ms → {f(pf['pu']['tqo_pp']*1e3,1)} ms |\n"
+            f"| What-if: stator skewed one slot pitch (D19): line THD / fundamental factor | "
+            f"{f(100*w['skew_one_slot']['thd_line'])} % / {f(w['skew_one_slot']['k_sk1'],4)} |")
+
+
+def t_redesign(rd):
+    if not rd:
+        return "_Redesign screen not run._"
+    rows = ["| Air gap (mm) | Slot depth × width (mm) | Xd | X'd | X''d | Rated field current vs base | Field Cu loss vs base | "
+            "SR-01 dip A1 / A3 | SR-05 132 kW dip A1 / A3 |", "|---|---|---|---|---|---|---|---|---|"]
+    for r in rd["rows"]:
+        rows.append(f"| {f(r['air_gap_mm'],0)} | {f(r['slot_depth_mm'],0)} × {f(r['slot_width_mm'],1)} | {f(r['xd'])} | {f(r['xdp'],3)} | "
+                    f"{f(r['xdpp'],3)} | ×{f(r['if_rated_rel'])} | ×{f(r['field_loss_rel'])} | "
+                    f"{f(r['A1']['bl_dip'])} / {f(r['A3']['bl_dip'])} % | {f(r['A1']['ms_dip'],1)} / {f(r['A3']['ms_dip'],1)} % |")
+    return "\n".join(rows)
 
 
 def fill(path: Path, tables: dict):
@@ -145,11 +162,13 @@ if __name__ == "__main__":
     st = json.loads((ROOT / "results" / f"studies_{src}.json").read_text())
     pff = ROOT / "results" / "params_femm.json"
     pf = json.loads(pff.read_text()) if pff.exists() else None
+    rdf = ROOT / "results" / f"redesign_screen_{src}.json"
+    rd = json.loads(rdf.read_text()) if rdf.exists() else None
     from bta.design import Design, load_machine
     an = Design(load_machine()).run()["pu"]
     tables = {"params": t_params(pf["pu"] if pf else None, an), "aoa": t_aoa(aoa), "gates": t_gates(aoa),
               "scores": t_scores(aoa), "budget": t_budget(st), "sens": t_sens(st), "xd": t_xd(st),
-              "diode": t_diode(st), "ds": t_ds(st), "femm": t_femm(pf)}
+              "diode": t_diode(st), "ds": t_ds(st), "femm": t_femm(pf), "redesign": t_redesign(rd)}
     for doc in ("DOSSIER.md", "README.md"):
         p = ROOT / doc
         if p.exists():

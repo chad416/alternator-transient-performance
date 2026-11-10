@@ -1,7 +1,7 @@
 {
  "vrmax_assumed": 14.0,
- "i_at_1s_assumed_pu": 2.9195783327524953,
+ "i_at_1s_assumed_pu": 2.919859709932892,
  "i_sc_required_pu": 3.0,
- "vrmax_needed": 14.6111328125,
- "increase_pct": 4.365234375000004
+ "vrmax_needed": 14.609082031249999,
+ "increase_pct": 4.350585937499996
 }

@@ -12,16 +12,17 @@ systems-engineering spine:
 
 The full report is in **[DOSSIER.md](DOSSIER.md)** (also as [DOSSIER.pdf](DOSSIER.pdf)).
 
-**Answer (FEMM-derived parameters).** The machine *just* meets the G3 block-load dip: −14.7 % against −15 %,
-with 0.3 points of margin. It meets the 4 s recovery once the AVR is retuned (0.97 s). It fails:
-- the 132 kW direct-on-line motor start: −22.9 % against −20 %;
+**Answer (FEMM-derived parameters, real end rings).** The machine meets the G3 block-load dip with no margin:
+−14.95 % against −15 %, a margin of 0.05 points, and the textbook AVR tuning fails it at −15.01 %. It meets the
+4 s recovery once the AVR is retuned (0.94 s). It fails:
+- the 132 kW direct-on-line motor start: −23.4 % against −20 %;
 - with shunt excitation, the 3 pu sustained fault current.
 
-The deciding parameter is **X'd**: 0.256 pu, against the 0.214 pu the motor start needs. The AVR, exciter and PMG move
-the first dip by at most 0.3 points; 12.6 of the 14.7 points are already there at t = 0⁺. Only the next frame with a
-PMG meets every requirement. Before that, the dossier recommends challenging the motor requirement and studying a
-lower-X'd redesign of the base frame. One open rotating diode is enough to break the dip limit silently; the study
-gives its signature on the stationary side.
+The deciding parameter is **X'd**: 0.256 pu, against the 0.207 pu the motor start needs. The AVR, exciter and PMG move
+the first dip by at most 0.3 points; 12.7 of the 14.95 points are already there at t = 0⁺. Only the next frame with a
+PMG meets every requirement. A base-frame redesign (8 mm air gap, shallower slots) reaches the motor start by
+0.1 points at +28 % field current. The dossier recommends challenging the motor requirement first. One open rotating
+diode is enough to break the dip limit without any alarm; the study gives its signature on the stationary side.
 
 ![Block load](docs/img/block_load.png)
 
@@ -43,12 +44,12 @@ gives its signature on the stationary side.
 <!-- TABLE:aoa -->
 | | Alternative | KP/KI/KD | OC overshoot | SR-01 dip | SR-02 t_U | SR-03 rise | SR-04 t_U | SR-05 132 kW dip | Max motor @20 % | SR-06 I_sc at 1 s | Gates |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| A0 | Baseline (shunt AVR, textbook PID) | 20.7/10.0/4.6 | 0.0 % | -14.73 % | 5.25 s | +17.0 % | 5.11 s | -23.0 % | 111 kW | 0.04 pu | 2/6 |
-| A1 | AVR retuned (shunt) | 30.0/60.0/8.0 | 6.0 % | -14.68 % | 0.97 s | +16.9 % | 1.85 s | -22.9 % | 111 kW | 0.04 pu | 4/6 |
-| A2 | Larger exciter + retune | 15.0/60.0/8.0 | 6.5 % | -14.42 % | 2.25 s | +17.3 % | 3.27 s | -22.3 % | 115 kW | 0.04 pu | 4/6 |
-| A3 | PMG excitation + retune | 30.0/60.0/8.0 | 8.3 % | -14.49 % | 0.97 s | +16.9 % | 1.85 s | -22.3 % | 115 kW | 2.92 pu | 4/6 |
-| A4 | Next frame (oversized) + retune | 30.0/90.0/8.0 | 9.7 % | -10.74 % | 0.72 s | +12.6 % | 1.54 s | -17.4 % | 151 kW | 0.05 pu | 5/6 |
-| A5 | Next frame + PMG + retune | 30.0/60.0/8.0 | 8.6 % | -10.64 % | 1.01 s | +12.6 % | 1.73 s | -17.1 % | 156 kW | 3.61 pu | 6/6 |
+| A0 | Baseline (shunt AVR, textbook PID) | 20.7/10.0/4.6 | 0.0 % | -15.01 % | 5.24 s | +16.6 % | 5.12 s | -23.4 % | 106 kW | 0.04 pu | 1/6 |
+| A1 | AVR retuned (shunt) | 30.0/60.0/8.0 | 8.1 % | -14.95 % | 0.94 s | +16.6 % | 1.83 s | -23.4 % | 111 kW | 0.04 pu | 4/6 |
+| A2 | Larger exciter + retune | 15.0/60.0/8.0 | 5.7 % | -14.73 % | 2.24 s | +16.9 % | 3.26 s | -22.8 % | 111 kW | 0.04 pu | 4/6 |
+| A3 | PMG excitation + retune | 30.0/30.0/8.0 | 9.5 % | -14.80 % | 2.06 s | +16.6 % | 1.54 s | -22.9 % | 111 kW | 2.92 pu | 4/6 |
+| A4 | Next frame (oversized) + retune | 30.0/60.0/8.0 | 8.8 % | -11.07 % | 0.97 s | +12.4 % | 1.70 s | -18.0 % | 147 kW | 0.05 pu | 5/6 |
+| A5 | Next frame + PMG + retune | 15.0/60.0/8.0 | 8.2 % | -10.99 % | 2.19 s | +12.4 % | 3.18 s | -17.7 % | 147 kW | 3.61 pu | 6/6 |
 <!-- /TABLE -->
 
 ## Run it
@@ -59,6 +60,7 @@ python -m pytest -q                       # model verification
 python -m scripts.run_aoa --femm          # trade study on FEMM parameters
 python -m scripts.run_studies --femm      # dip budget, sensitivity, X'd sweep, diode FMEA
 python -m scripts.check_a3_ceiling        # AVR ceiling the PMG option needs for 3 pu fault current
+python -m scripts.screen_redesign         # base-frame redesign screen for a lower X'd (DOSSIER §8.6)
 python -m scripts.make_figures --femm
 python -m scripts.make_tables femm        # writes the tables into DOSSIER.md and README.md
 ```

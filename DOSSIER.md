@@ -7,16 +7,19 @@
 meet the ISO 8528-5 performance class G3 voltage limits when a block load is applied or a large induction motor
 is started direct-on-line? Which design or AVR parameters decide that?
 
-**Short answer.** Only just, and not robustly. On FEMM-derived parameters the reference machine meets the G3 block-load
-dip: −14.7 % against −15 % with the retuned shunt AVR (A1). Once the AVR is retuned it also meets the 4 s recovery
-(0.97 s). It fails two of the six "shalls":
-- the 132 kW direct-on-line motor start, at −22.9 % against −20 % (the largest motor within −20 % is 111 kW);
+**Short answer.** On the limit, with no engineering margin. On FEMM-derived parameters with the real end-ring
+resistance, the reference machine dips −14.95 % on the G3 block load with the retuned shunt AVR (A1), against a −15 %
+limit. That margin of 0.05 points is smaller than the model's own uncertainty, and with the textbook AVR tuning (A0)
+the dip is −15.01 %, a fail. Once the AVR is retuned, the machine meets the 4 s recovery (0.94 s). It fails two of the
+six "shalls":
+- the 132 kW direct-on-line motor start, at −23.4 % against −20 % (the largest motor within −20 % is 111 kW);
 - with shunt excitation, the sustained fault current, at 0.04 pu against 3 pu.
 
-**The deciding parameter is the transient reactance X'd.** It is 0.256 pu here. SR-01 allows at most 0.263 pu and
-the motor start at most 0.214 pu. The AVR, a larger exciter and a PMG change the recovery and the fault current; they
-move the first dip by no more than 0.3 percentage points. Only the next frame meets every shall, and only together
-with a PMG (A5).
+**The deciding parameter is the transient reactance X'd.** It is 0.256 pu here. SR-01 allows at most 0.257 pu and
+the motor start at most 0.207 pu (shunt excitation). The AVR, a larger exciter and a PMG change the recovery and the
+fault current; they move the first dip by no more than 0.3 percentage points. Only the next frame meets every shall,
+and only together with a PMG (A5). A redesign of the base frame (§8.6) reaches the motor start only with an 8 mm air
+gap and shallower slots, and that costs 28 % more field current.
 
 **How to read the evidence.** Every engineering value carries a tag:
 - **[S]** sourced, with a reference in §12;
@@ -32,41 +35,54 @@ written out and derived in `docs/design_notes.md` instead of being cited by numb
 
 ## 0. Findings
 
-Numbers are from `results/aoa_femm.json`, `results/studies_femm.json`, `results/params_femm.json` and
-`results/a3_ceiling_femm.json`. All are on FEMM-derived parameters.
+Numbers are from `results/aoa_femm.json`, `results/studies_femm.json`, `results/params_femm.json`,
+`results/a3_ceiling_femm.json` and `results/redesign_screen_femm.json`. All are on FEMM-derived parameters, with the
+end-ring resistance referred to the bars (D18).
 
 1. **FEMM and the analytic design agree within 8 % on everything except the damper.** Xd −8 %, Xq −8 %, X'd −3 %,
    T'do −5 %, no-load field current +8 % (FEMM vs analytic). X''d is 43 % higher in FEMM: 0.207 against 0.145 pu.
    The reasons are in §6.1: the analytic cage referral spreads the bars over the whole pole arc, and FEMM resolves the
-   leakage of the bar slits.
-2. **The first dip is almost all reactance.** Of the −14.7 % block-load dip, −12.6 points are already there at
-   t = 0⁺ with the rotor fluxes frozen. The real excitation adds −2.1 points. The excitation option moves the total
-   only between −14.4 % (A2) and −14.7 % (A1).
-3. **The SR-01 margin is 0.3 points and fragile.** Any one of the following breaks it on its own (§8.4):
-   - X'd +20 %;
-   - X''d +20 %;
-   - exciter TE = 0.40 s;
-   - VRMAX = 10 pu;
-   - damper time constants halved, which stands in for real end-ring resistance (FEMM rings are ideal): −15.05 %.
-4. **Recovery is an AVR-tuning problem, and it is solved.** The textbook pole-cancellation PID (A0) takes 5.25 s and
-   fails SR-02. The grid-tuned PID recovers in 0.97 s with a 6 % open-circuit step overshoot (DR-03 holds).
-5. **The motor start decides the frame.** With the base frame, a 132 kW DOL start dips by −22.3 % (PMG) to −22.9 %
-   (shunt). The largest motor within −20 % is 111–115 kW; on the next frame it is 151–156 kW. To start 132 kW within
-   −20 %, X'd must be at most 0.214 pu (shunt) or 0.221 pu (PMG).
+   leakage of the bar slits. With the end ring referred by the same formula in both (k_ring = 1.49), T''d is 19.9 ms
+   (FEMM) against 17.2 ms (analytic) and 12–19 ms on public data sheets.
+2. **The first dip is almost all reactance.** Of the −14.95 % block-load dip, −12.66 points are already there at
+   t = 0⁺ with the rotor fluxes frozen. The real excitation adds −2.31 points. The excitation option moves the total
+   only between −14.73 % (A2) and −14.95 % (A1).
+3. **The SR-01 margin is 0.05 points, which is no margin.** Each of the following breaks it on its own (§8.4):
+    - X'd +20 % (−16.94 %);
+    - X''d +20 % (−15.86 %);
+    - exciter TE = 0.40 s (−15.42 %);
+    - VRMAX = 10 pu (−15.40 %);
+    - T'do −20 % (−15.13 %);
+    - sensing TR = 30 ms (−15.08 %);
+    - rectifier KC = 0.25 (−15.05 %);
+    - an end ring of half the cross-section (−15.05 %).
+
+    With the ideal FEMM ring the margin was 0.32 points, so the real ring resistance alone uses most of it (D18).
+4. **Recovery is an AVR-tuning problem, and it is solved.** The textbook pole-cancellation PID (A0) takes 5.24 s and
+   fails SR-02. The grid-tuned PID recovers in 0.94 s with an 8.1 % open-circuit step overshoot (DR-03 holds).
+5. **The motor start decides the frame.** With the base frame, a 132 kW DOL start dips by −22.9 % (PMG) to −23.4 %
+   (shunt). The largest motor within −20 % is 111 kW; on the next frame it is 147 kW. To start 132 kW within −20 %,
+   X'd must be at most 0.207 pu (shunt) or 0.214 pu (PMG).
 6. **The fault-current shall decides the excitation.** Shunt excitation collapses to 0.04 pu at 1 s. The PMG
    sustains 2.92 pu, 2.7 % short of 3 pu. An AVR ceiling 4.4 % higher (VRMAX 14.6 instead of 14.0 pu, an assumed
    value, D5) closes the gap.
 7. **The root cause is the reference design's X'd, not the excitation.** A machine with data-sheet-class parameters
    (X'd = 0.17 pu, midpoints of [S7]) dips only −8.5 % on the same block load and −16.2 % on the 132 kW start, with
    the same shunt AVR. The study design's X'd of 0.256 pu is above the public range of 0.146–0.19 pu.
-8. **A single open rotating diode silently breaks SR-01.** It derates the rectifier to 0.765, and the dip becomes
-   −15.02 %. A shorted diode raises the exciter armature current 2.9× and the dip to −15.67 %. The 1×/6× f_ex
+8. **A single open rotating diode breaks SR-01 without any alarm.** It derates the rectifier to 0.765, and the dip
+   becomes −15.22 %. A shorted diode raises the exciter armature current 2.9× and the dip to −15.72 %. The 1×/6× f_ex
    ratio of the field-frame MMF rises from 0.002 (healthy) to 5.5 (open) and 42 (short), so the failure can be
    detected from the stationary side.
 9. **Frequency is not the limit.** At a 50 % step on the generic turbo-charged engine, the frequency dips by −4.7 %
-   (G3: −7 %) and recovers in 2.5 s (G3: 3 s). The engine adds 0.7–0.9 points to the voltage dip.
+   (G3: −7 %) and recovers in 2.5 s (G3: 3 s). The engine adds 0.7–0.8 points to the voltage dip.
 10. **Waveform.** The no-load line-to-line THD is 2.27 % with an unskewed stator (SR-07: 5 %). The largest
-    harmonics are the 5th (1.94 %) and the 7th (0.99 %); the 2/3 pitch removes the triplens.
+    harmonics are the 5th (1.94 %) and the 7th (0.99 %); the 2/3 pitch removes the triplens. A stator skew of one
+    slot pitch would lower the THD to 2.02 % at a 0.3 % loss of fundamental (D19), so skew is not needed for SR-07.
+11. **A base-frame redesign can reach the motor start, but only just and at a field-current price** (§8.6, an L1
+    screen calibrated to FEMM). An 8 mm air gap (instead of 4 mm) with shallower stator slots of the same area gives
+    X'd = 0.206 pu. The 132 kW start then dips −19.9 %, and the SR-01 dip improves by 2.6 points. The rated field
+    current rises by 28 % and the field copper loss by a factor of 1.64 with the same coil. The field coil already
+    fills the space between the poles (D8), so the field winding and the exciter would have to be redesigned.
 
 ---
 
@@ -250,9 +266,9 @@ reactances. The 2-D section (`bta/geometry.py`) is checked for fit: the field co
 | X''q | 0.131 | 0.160 | 0.24–0.37 |
 | T'do (s) | 1.927 | 1.822 | 1.7–4.09 |
 | T'd (s) | 0.214 | 0.213 | 0.08–0.097 |
-| T''do (s) | 0.032 | 0.037 | — |
-| T''d (s) | 0.017 | 0.030 | 0.012–0.019 |
-| T''qo (s) | 0.398 | 0.229 | — |
+| T''do (s) | 0.032 | 0.025 | — |
+| T''d (s) | 0.017 | 0.020 | 0.012–0.019 |
+| T''qo (s) | 0.398 | 0.154 | — |
 | Ra | 0.011 | 0.011 | — |
 <!-- /TABLE -->
 
@@ -271,16 +287,17 @@ reactances. The 2-D section (`bta/geometry.py`) is checked for fit: the field co
 | SSFR fit RMS error, d (field open) / q | 0.46 % / 0.23 % |
 | SSFR low-frequency limit vs static solve (linear μr 2000 vs M-19 B-H), d / q | -4.3 % / -1.7 % |
 | X''d: damper only (field open) / with field branch | 0.345 / 0.207 |
-| T''d / T''do (circuit) | 29.7 ms / 36.8 ms |
+| End-ring factor k_ring on the damper resistance (D18, ring 400 mm²) | 1.490 |
+| T''d / T''do: ideal FEMM ring → with end ring | 29.7 / 36.8 ms → 19.9 / 24.7 ms |
+| T''qo: ideal ring → with end ring | 229.4 ms → 154.0 ms |
+| What-if: stator skewed one slot pitch (D19): line THD / fundamental factor | 2.02 % / 0.9971 |
 <!-- /TABLE -->
 
 **Why FEMM and the analytic design differ** (L1 vs L2, Principle 33.5, p. 718):
 - **Xd, Xq (−8 %) and the air-gap-line field current (+7 %).** These are the same effect seen from two sides: FEMM's
   effective air gap is about 7 % larger. FEMM resolves three things the analytic model folds into a Carter factor
-  and form factors for an ideal cosine pole:
-  - the stator slot openings;
-  - the nine 2 mm damper slits in the pole face (D16, D17);
-  - the finite iron permeability at the low test currents.
+  and form factors for an ideal cosine pole: the stator slot openings, the nine 2 mm damper slits in the pole face
+  (D16, D17), and the finite iron permeability at the low test currents.
 - **X'd (−3 %) and T'do (−5 %).** These are dominated by the field and stator leakage, which both levels compute
   similarly. The end-winding leakage is analytic in both. FEMM's Lff is 1.80 H against 1.90 H analytic.
 - **X''d (+43 %) and X''q (+22 %).** The analytic referral (`bta/design.py`, `damper()`) treats the bars as a cage
@@ -292,10 +309,11 @@ reactances. The 2-D section (`bta/geometry.py`) is checked for fit: the field co
   with the field branch from the static solves, in the classical equal-mutual circuit (no Canay differential
   leakage). The fit errors are 0.46 % (d) and 0.23 % (q). The SSFR low-frequency limit is 4.3 % (d) and 1.7 % (q)
   below the static inductance, because the SSFR uses linear iron (μr = 2000) and the static solve the M-19 B-H curve.
-- **T''d.** It is 30 ms here against 12–19 ms on data sheets, because the FEMM end rings have zero resistance.
-  Real ring resistance only shortens T''do and T''qo. Halving both (§8.4) deepens the SR-01 dip from −14.68 % to
-  −15.05 %. The ideal ring is therefore slightly *optimistic*, and the 0.3-point margin of finding 3 may not survive
-  real end rings. Measuring T''d (sudden short circuit, §10.3) is the first test to run.
+- **T''d and the end ring.** The FEMM rings are ideal (D17), and the first reduction gave T''d = 29.7 ms against
+  12–19 ms on data sheets. The real ring adds its segment resistance, referred to a bar by the same cage formula as
+  the analytic design: k_ring = 1.49 for the 400 mm² ring (D18). The dynamic model uses the FEMM damper time constants
+  divided by k_ring, which gives T''d = 19.9 ms, at the top of the data-sheet range. The ring costs 0.27 points of
+  SR-01 margin (−14.68 % → −14.95 %). Measuring T''d (sudden short circuit, §10.3) is the first test to run.
 - **Xq against public data.** Xq/Xd is 0.46 here against about 0.8 on the LV data sheets [S7]. This follows from the
   study design's pole arc (0.68) and wide interpolar gap. It enters the dip through X''q only weakly, and the
   data-sheet-class run in §6.3 brackets it.
@@ -319,12 +337,12 @@ Results (generated):
 <!-- TABLE:budget -->
 | | Reactance step t=0⁺ | Flux decay (ideal excitation) | Real excitation | Total dip | Margin to −15 % | Extra dip from engine speed (50 % step) |
 |---|---|---|---|---|---|---|
-| A0 | 12.60 | -0.03 | 2.17 | 14.73 | 0.27 | 0.89 |
-| A1 | 12.60 | -0.03 | 2.11 | 14.68 | 0.32 | 0.72 |
-| A2 | 12.60 | -0.03 | 1.85 | 14.42 | 0.58 | 0.73 |
-| A3 | 12.60 | -0.03 | 1.92 | 14.49 | 0.51 | 0.69 |
-| A4 | 8.98 | 0.00 | 1.76 | 10.74 | 4.26 | 0.74 |
-| A5 | 8.98 | 0.00 | 1.67 | 10.64 | 4.36 | 0.74 |
+| A0 | 12.66 | -0.01 | 2.36 | 15.01 | -0.01 | 0.81 |
+| A1 | 12.66 | -0.01 | 2.31 | 14.95 | 0.05 | 0.69 |
+| A2 | 12.66 | -0.02 | 2.08 | 14.73 | 0.27 | 0.69 |
+| A3 | 12.66 | -0.01 | 2.15 | 14.80 | 0.20 | 0.66 |
+| A4 | 9.04 | 0.05 | 1.98 | 11.07 | 3.93 | 0.71 |
+| A5 | 9.04 | 0.05 | 1.89 | 10.99 | 4.01 | 0.72 |
 <!-- /TABLE -->
 
 ![Dip budget](docs/img/dip_budget.png)
@@ -334,8 +352,8 @@ Results (generated):
 <!-- TABLE:xd -->
 | Excitation | Largest X'd meeting SR-01 (−15 %) | Largest X'd meeting SR-05 (132 kW, −20 %) |
 |---|---|---|
-| A1 shunt | 0.263 | 0.214 |
-| A3 PMG | 0.267 | 0.221 |
+| A1 shunt | 0.257 | 0.207 |
+| A3 PMG | 0.261 | 0.214 |
 <!-- /TABLE -->
 
 ![Dip vs X'd](docs/img/dip_vs_xd.png)
@@ -347,7 +365,7 @@ the same excitation (generated):
 | Machine | Excitation | SR-01 dip | SR-02 t_U | 132 kW dip |
 |---|---|---|---|---|
 | Data-sheet class (X'd 0.17) | A1 shunt retuned | -8.45 % | 1.42 s | -16.2 % |
-| Data-sheet class | A3 PMG retuned | -8.42 % | 1.42 s | -15.7 % |
+| Data-sheet class | A3 PMG retuned | -8.83 % | 2.67 s | -15.7 % |
 <!-- /TABLE -->
 
 ## 7. Modeling and simulation ([W] ch. 33)
@@ -386,12 +404,12 @@ plant by a grid search over KP/KI/KD, with the open-circuit 5 % step overshoot h
 <!-- TABLE:aoa -->
 | | Alternative | KP/KI/KD | OC overshoot | SR-01 dip | SR-02 t_U | SR-03 rise | SR-04 t_U | SR-05 132 kW dip | Max motor @20 % | SR-06 I_sc at 1 s | Gates |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| A0 | Baseline (shunt AVR, textbook PID) | 20.7/10.0/4.6 | 0.0 % | -14.73 % | 5.25 s | +17.0 % | 5.11 s | -23.0 % | 111 kW | 0.04 pu | 2/6 |
-| A1 | AVR retuned (shunt) | 30.0/60.0/8.0 | 6.0 % | -14.68 % | 0.97 s | +16.9 % | 1.85 s | -22.9 % | 111 kW | 0.04 pu | 4/6 |
-| A2 | Larger exciter + retune | 15.0/60.0/8.0 | 6.5 % | -14.42 % | 2.25 s | +17.3 % | 3.27 s | -22.3 % | 115 kW | 0.04 pu | 4/6 |
-| A3 | PMG excitation + retune | 30.0/60.0/8.0 | 8.3 % | -14.49 % | 0.97 s | +16.9 % | 1.85 s | -22.3 % | 115 kW | 2.92 pu | 4/6 |
-| A4 | Next frame (oversized) + retune | 30.0/90.0/8.0 | 9.7 % | -10.74 % | 0.72 s | +12.6 % | 1.54 s | -17.4 % | 151 kW | 0.05 pu | 5/6 |
-| A5 | Next frame + PMG + retune | 30.0/60.0/8.0 | 8.6 % | -10.64 % | 1.01 s | +12.6 % | 1.73 s | -17.1 % | 156 kW | 3.61 pu | 6/6 |
+| A0 | Baseline (shunt AVR, textbook PID) | 20.7/10.0/4.6 | 0.0 % | -15.01 % | 5.24 s | +16.6 % | 5.12 s | -23.4 % | 106 kW | 0.04 pu | 1/6 |
+| A1 | AVR retuned (shunt) | 30.0/60.0/8.0 | 8.1 % | -14.95 % | 0.94 s | +16.6 % | 1.83 s | -23.4 % | 111 kW | 0.04 pu | 4/6 |
+| A2 | Larger exciter + retune | 15.0/60.0/8.0 | 5.7 % | -14.73 % | 2.24 s | +16.9 % | 3.26 s | -22.8 % | 111 kW | 0.04 pu | 4/6 |
+| A3 | PMG excitation + retune | 30.0/30.0/8.0 | 9.5 % | -14.80 % | 2.06 s | +16.6 % | 1.54 s | -22.9 % | 111 kW | 2.92 pu | 4/6 |
+| A4 | Next frame (oversized) + retune | 30.0/60.0/8.0 | 8.8 % | -11.07 % | 0.97 s | +12.4 % | 1.70 s | -18.0 % | 147 kW | 0.05 pu | 5/6 |
+| A5 | Next frame + PMG + retune | 15.0/60.0/8.0 | 8.2 % | -10.99 % | 2.19 s | +12.4 % | 3.18 s | -17.7 % | 147 kW | 3.61 pu | 6/6 |
 <!-- /TABLE -->
 
 ![Block load](docs/img/block_load.png)
@@ -403,7 +421,7 @@ plant by a grid search over KP/KI/KD, with the open-circuit 5 % step overshoot h
 <!-- TABLE:gates -->
 | Requirement | A0 | A1 | A2 | A3 | A4 | A5 |
 |---|---|---|---|---|---|---|
-| SR-01 dip | pass | pass | pass | pass | pass | pass |
+| SR-01 dip | **fail** | pass | pass | pass | pass | pass |
 | SR-02 recovery | **fail** | pass | pass | pass | pass | pass |
 | SR-03 rise | pass | pass | pass | pass | pass | pass |
 | SR-04 rejection recovery | **fail** | pass | pass | pass | pass | pass |
@@ -416,12 +434,12 @@ plant by a grid search over KP/KI/KD, with the open-circuit 5 % step overshoot h
 <!-- TABLE:scores -->
 | | Cost index [A/D] | Risk [A] | Integration [A] | Weighted score | Won (weights ±50 %) | Meets every shall |
 |---|---|---|---|---|---|---|
-| A0 | 1.00 | 9 | 10 | 50.0 | 12.2 % | no |
-| A1 | 1.00 | 8 | 10 | 44.2 | 1.2 % | no |
-| A2 | 1.04 | 8 | 9 | 39.0 | 0.0 % | no |
-| A3 | 1.06 | 8 | 8 | 46.1 | 2.1 % | no |
-| A4 | 1.25 | 9 | 6 | 60.0 | 82.7 % | no |
-| A5 | 1.31 | 8 | 5 | 49.4 | 1.8 % | yes |
+| A0 | 1.00 | 9 | 10 | 50.0 | 9.2 % | no |
+| A1 | 1.00 | 8 | 10 | 46.5 | 3.2 % | no |
+| A2 | 1.04 | 8 | 9 | 39.5 | 0.0 % | no |
+| A3 | 1.06 | 8 | 8 | 44.1 | 0.2 % | no |
+| A4 | 1.25 | 9 | 6 | 61.5 | 87.4 % | no |
+| A5 | 1.31 | 8 | 5 | 47.1 | 0.1 % | yes |
 <!-- /TABLE -->
 
 ![Scores](docs/img/aoa_scores.png)
@@ -431,16 +449,16 @@ plant by a grid search over KP/KI/KD, with the open-circuit 5 % step overshoot h
 <!-- TABLE:sens -->
 | Parameter [A] (low/high) | SR-01 dip low | high | t_U low | high | 132 kW dip low | high |
 |---|---|---|---|---|---|---|
-| X'd -/+20 % | -13.81 | -16.39 | 0.98 | 0.93 | -21.6 | -25.3 |
-| X''d -/+20 % | -13.78 | -15.87 | 1.03 | 0.90 | -22.0 | -24.2 |
-| T'do -/+20 % | -14.81 | -14.59 | 0.97 | 0.97 | -23.2 | -22.7 |
-| T''do, T''qo x0.5/x1 (end-ring R) | -15.05 | -14.68 | 0.92 | 0.97 | -23.6 | -22.9 |
-| Exciter TE 0.15/0.40 s | -14.19 | -15.25 | 1.00 | 1.63 | -22.0 | -24.1 |
-| Rectifier KC 0.08/0.25 | -14.61 | -14.78 | 0.95 | 0.99 | -22.8 | -23.1 |
-| Ceiling VRMAX 10/18 | -15.24 | -14.38 | 0.91 | 1.02 | -24.3 | -22.3 |
-| Sensing TR 5/30 ms | -14.65 | -14.81 | 0.96 | 1.02 | -22.9 | -23.0 |
-| Motor Rr locked 0.035/0.070 | -14.68 | -14.68 | 0.97 | 0.97 | -24.0 | -21.2 |
-| *A1 base* | -14.68 | | 0.97 | | -22.9 | |
+| X'd -/+20 % | -13.78 | -16.94 | 0.96 | 0.90 | -21.7 | -26.0 |
+| X''d -/+20 % | -14.25 | -15.86 | 0.99 | 0.87 | -22.7 | -24.3 |
+| T'do -/+20 % | -15.13 | -14.83 | 0.94 | 0.95 | -23.8 | -23.1 |
+| End ring: half area / ideal (T''do, T''qo) | -15.05 | -14.68 | 0.92 | 0.97 | -23.6 | -22.9 |
+| Exciter TE 0.15/0.40 s | -14.52 | -15.42 | 0.99 | 1.69 | -22.5 | -24.5 |
+| Rectifier KC 0.08/0.25 | -14.89 | -15.05 | 0.93 | 0.97 | -23.2 | -23.6 |
+| Ceiling VRMAX 10/18 | -15.40 | -14.70 | 0.89 | 0.99 | -24.7 | -22.8 |
+| Sensing TR 5/30 ms | -14.93 | -15.08 | 0.93 | 1.00 | -23.4 | -23.5 |
+| Motor Rr locked 0.035/0.070 | -14.95 | -14.95 | 0.94 | 0.94 | -24.5 | -21.7 |
+| *A1 base* | -14.95 | | 0.94 | | -23.4 | |
 <!-- /TABLE -->
 
 ![Tornado](docs/img/tornado.png)
@@ -450,20 +468,50 @@ plant by a grid search over KP/KI/KD, with the open-circuit 5 % step overshoot h
 These are recommendations to the decision maker, not decisions (Principle 32.9).
 
 1. **If SR-05 (a 132 kW DOL start within −20 %) and SR-06 (3 pu at 1 s) stay as written: A5**, the next frame with
-   a PMG and a retuned AVR. It is the only alternative that meets all six shalls, at a cost index of 1.31.
-   - A4 scores highest and wins 83 % of the weight draws, but it fails SR-06. This is why the gates come before the
-     scores.
+   a PMG and a retuned AVR. It is the only alternative that meets all six shalls, at a cost index of 1.31. A4 scores
+   highest and wins 87 % of the weight draws, but it fails SR-06. This is why the gates come before the scores.
 2. **Challenge SR-05 before buying the frame** ([W] ch. 19, requirement validation). If the largest motor is held
    at 111 kW, or the 132 kW pump gets a soft starter, A3 meets every shall except SR-06. A3 is the PMG with a
    retuned AVR, at a cost index of 1.06. SR-06 is then met with a 4.4 % higher AVR ceiling. This saves about a fifth
-   of the alternator cost index against A5.
-3. **Study one more alternative before committing to the next frame: a base-frame redesign for X'd ≤ 0.21 pu.**
-   Public 310–1150 kVA data sheets show X'd = 0.146–0.19 pu, and the data-sheet-class run passes SR-01 with
-   6.5 points of margin. X'd here is mostly leakage (field-pole leakage and stator slot leakage), so the levers are
-   the pole and slot geometry, not the frame size. This alternative was not in the charter and is not scored.
-4. **In every case**, retune the AVR with the DR-03 rule, since the textbook tuning fails SR-02. Also fit a
+   of the alternator cost index against A5. The price is an SR-01 margin of only 0.2 points, so T''d and X'd must be
+   confirmed by test (§10.3) before this choice is final.
+3. **Treat a base-frame redesign as a real but tight alternative** (§8.6). Only the 8 mm air gap with shallower slots
+   meets SR-05, by 0.1 points, and it needs 28 % more field current. Before it can be scored against A5 it needs
+   a FEMM run of that geometry, a new field coil that fits (D8) and a resized exciter. It was not in the charter and
+   is not scored.
+4. **In every case**, retune the AVR with the DR-03 rule, since the textbook tuning fails SR-01 and SR-02. Also fit a
    rotating-diode monitor (1×/6× f_ex): on the base frame a single open diode is enough to break SR-01 without any
    alarm.
+
+### 8.6 Screening a base-frame redesign for a lower X'd (generated, decision D20)
+
+`scripts/screen_redesign.py` varies the two levers that act on X'd at a fixed rating and frame in the analytic
+design: the air gap, and a shallower, wider stator slot of the same area (the same copper, so the same current
+density). Each variant gets the FEMM/analytic correction of the base design, the same rule as the next-frame
+alternatives (D11). It is then run through SR-01 and SR-05 with the tuned A1 and A3 gains. The rated-load field
+current comes from the two-reaction phasor plus the no-load saturation increment, relative to the base design. The
+4 mm, 58 mm row is the base geometry. It reads 0.2 points deeper than §8.1 because the screen uses the analytic OCC
+for every variant, so the rows are compared with that row, not with §8.1.
+
+<!-- TABLE:redesign -->
+| Air gap (mm) | Slot depth × width (mm) | Xd | X'd | X''d | Rated field current vs base | Field Cu loss vs base | SR-01 dip A1 / A3 | SR-05 132 kW dip A1 / A3 |
+|---|---|---|---|---|---|---|---|---|
+| 4 | 58 × 14.0 | 2.20 | 0.256 | 0.207 | ×1.00 | ×1.00 | -15.16 / -15.00 % | -23.6 / -23.1 % |
+| 5 | 58 × 14.0 | 1.79 | 0.239 | 0.204 | ×1.07 | ×1.14 | -14.36 / -14.23 % | -22.3 / -21.9 % |
+| 6 | 58 × 14.0 | 1.52 | 0.228 | 0.202 | ×1.14 | ×1.30 | -13.84 / -13.74 % | -21.4 / -21.4 % |
+| 7 | 58 × 14.0 | 1.32 | 0.221 | 0.201 | ×1.21 | ×1.47 | -13.48 / -13.40 % | -21.1 / -21.1 % |
+| 8 | 58 × 14.0 | 1.18 | 0.215 | 0.201 | ×1.28 | ×1.65 | -13.23 / -13.16 % | -20.9 / -20.9 % |
+| 6 | 50 × 16.2 | 1.51 | 0.219 | 0.188 | ×1.14 | ×1.30 | -13.21 / -13.11 % | -20.6 / -20.4 % |
+| 7 | 50 × 16.2 | 1.31 | 0.211 | 0.187 | ×1.21 | ×1.46 | -12.84 / -12.76 % | -20.1 / -20.1 % |
+| 8 | 50 × 16.2 | 1.17 | 0.206 | 0.187 | ×1.28 | ×1.64 | -12.58 / -12.51 % | -19.9 / -19.9 % |
+<!-- /TABLE -->
+
+Reading the table:
+- The air gap lowers X'd by lowering the armature reaction. It raises the no-load field current almost in
+  proportion to the gap. The rated-load field current rises less (×1.28 at 8 mm), because Xd falls at the same time.
+- Shallower slots lower the slot leakage, and with it Xl, X'd and X''d.
+- Only the 8 mm, 50 mm variant meets SR-05 (−19.9 %). It is an L1 screen, and FEMM verification of that geometry is
+  the next step (OPEN_ITEMS.md).
 
 ## 9. Reliability: FMEA ([W] ch. 34)
 
@@ -492,9 +540,9 @@ simulation.
 <!-- TABLE:diode -->
 | Rectifier state | Mean DC voltage (V) | Capability factor | Max armature current vs healthy | Field-frame MMF at f_ex (A) | at 6 f_ex (A) | ratio 1/6 | SR-01 dip | SR-02 t_U | 132 kW dip |
 |---|---|---|---|---|---|---|---|---|---|
-| Healthy | 51.1 | 1.000 | 1.00 | 0.01 | 8.98 | 0.002 | -14.68 % | 0.97 s | -22.9 % |
-| One diode open | 39.1 | 0.765 | 1.06 | 29.31 | 5.30 | 5.530 | -15.02 % | 1.11 s | -23.7 % |
-| One diode shorted | 26.3 | 0.515 | 2.90 | 99.20 | 2.36 | 41.946 | -15.67 % | 1.54 s | -25.3 % |
+| Healthy | 51.1 | 1.000 | 1.00 | 0.01 | 8.98 | 0.002 | -14.95 % | 0.94 s | -23.4 % |
+| One diode open | 39.1 | 0.765 | 1.06 | 29.31 | 5.30 | 5.530 | -15.22 % | 1.08 s | -24.1 % |
+| One diode shorted | 26.3 | 0.515 | 2.90 | 99.20 | 2.36 | 41.946 | -15.72 % | 1.51 s | -25.7 % |
 <!-- /TABLE -->
 
 ![Diode signature](docs/img/diode_signature.png)
@@ -585,8 +633,10 @@ generic [A]. Its effect (§6.2, last column) is therefore a sensitivity, not a v
 - **The 132 kW motor and its parameters:** the starting PF follows from the parameters (0.34 at locked rotor, within the 0.3–0.5 of [S8]).
 
 **Limits:**
-- 2-D FEMM without skew or end effects; the end-winding leakage comes from the analytic model.
-- Damper end rings are ideal in FEMM. §8.4 bounds the effect: halving T''do and T''qo breaks SR-01 (−15.05 %).
+- 2-D FEMM without skew or end effects. The end-winding leakage and the end-ring resistance (D18) come from the
+  analytic model. Skew is applied to the FEMM harmonics only, as a what-if (D19).
+- The end-ring referral uses the continuous-cage formula. §8.4 varies the ring area: half the area gives −15.05 %.
+- The redesign screen (§8.6) is L1 with the FEMM calibration of the base design, not a FEMM solution of each variant.
 - RMS dynamics only, so no first-cycle offset.
 - One design point.
 - The textbook equations [T1]–[T5] are derived in `docs/design_notes.md` but their equation numbers were not re-checked against the books.
@@ -607,19 +657,22 @@ generic [A]. Its effect (§6.2, last column) is therefore a sensitivity, not a v
 | D10 | FEMM solver run visible, at above-normal priority | Minimised window | A minimised solver was throttled by the OS on a busy workstation (observed 10 % CPU duty) |
 | D11 | Next-frame alternative designed with the same code, FEMM correction carried over | Scale per-unit values by kVA | Keeps the comparison like-for-like and traceable to geometry |
 | D12 | Cite only three neutral public data sheets | Four sheets | Keeps company and product names of prospective employers out of the repository |
-| D13 | THF not computed | Compute with a remembered weighting table | The THF weighting table could not be verified, and the current IEC 60034-1 contents list clause 9.11 as THD, not THF [S4]. So only THD is claimed |
+| D13 | THD, not THF, is the waveform criterion (SR-07) | Compute THF with a remembered weighting table | The current IEC 60034-1 lists clause 9.11 as THD for synchronous machines, not THF [S4], so THD is the criterion to meet. The THF weighting table could not be verified, so no THF is claimed |
 | D14 | SSFR in FEMM with linear iron, μr = 2000 [A] | Nonlinear iron in the time-harmonic solver | SSFR is a small-signal test at a few % of rated current. The nonlinear harmonic solve needed minutes per point with no physical gain |
 | D15 | SSFR with the field OPEN and the bars joined by ideal end rings (bar connection: see D17). The field branch comes from the static FEMM solutions (Lff, Lafd) and the design resistance, combined in the d-axis circuit | Field modelled as one solid shorted loop | The first SSFR run with a solid-loop field gave Ld = 0.135 mH flat above 1 Hz, and X''q ≈ X'q. The solid loop crowds eddy currents to the coil edges and screens like an extra damper, which a stranded coil cannot do. (A remark in an earlier draft that unconnected bars left the q-axis damper inactive came from the closed-bridge geometry of D16 and is withdrawn; see D17.) The raw first run is kept as `femm/out/prelim_closed_damper_slots/ssfr_field_solid_loop.csv` |
 | D16 | Damper bars in semi-open slots (2 mm slit to the pole surface) | Bars fully enclosed under a 3 mm iron bridge | With a closed bridge and linear iron, the bridge carried the flux around the cage: the bar-to-bar flux difference was about 1000× smaller than the pole flux, and X''d ≈ X'd. Real amortisseur slots are semi-open, and the analytic damper permeance already assumed the 2 mm opening. The closed-slot results are kept in `femm/out/prelim_closed_damper_slots/` |
 | D17 | 9 damper bars per pole (8 pitches of 0.85 slot pitch = 83 % of the pole arc), each bar shorted by an ideal continuous end ring (FEMM block with no circuit) | 6 bars (52 % of the arc); all bars of the pole in one zero-net-current parallel circuit | The full FEMM run with 6 bars gave X''d = 0.242 pu against X'd = 0.257 pu and X''q = 0.90 pu: the outer half of the pole face had no damper, while the analytic model treats the cage as spread over the whole arc. The zero-net constraint is also wrong for the q axis: there the bar currents of one pole have the same sign and return through the ring to the next pole. Under anti-periodic symmetry an ideal continuous ring forces the common bar voltage to zero, which is exactly a no-circuit block (J = −jωσA). A quick check at 100 Hz (2-D inductance, `femm/out/damper_check_6v9_bars.txt`): d axis 0.531 → 0.190 mH (6 → 9 bars, same for both connections); q axis 0.388 mH (parallel circuit) vs 0.078 mH (no circuit). The 6-bar results are kept in `femm/out/prelim_6bars_zero_net/` |
+| D18 | End-ring resistance referred to the FEMM damper: every damper time constant divided by k_ring = R_eq / R_bar = 1.49 (400 mm² ring) | Keep the ideal ring and cover the ring only in the sensitivity study | The ideal ring gave T''d = 29.7 ms, outside the 12–19 ms of public data sheets [S7]. The referral R_eq = R_bar + R_seg / (2 sin²(α/2)) is the same formula the analytic design uses (`bta/design.py`, `damper()`), so FEMM and analytic share one end-ring model. The resistance changes no reactance. Result: T''d = 19.9 ms, and the SR-01 margin falls from 0.32 to 0.05 points. The ideal-ring values are kept in `results/params_femm.json` (`end_ring.ideal_ring`) |
+| D19 | Skew as a post-processed what-if on the FEMM harmonics (skew factor sin(nγ/2)/(nγ/2), γ = one slot pitch) | A skewed multi-slice FEMM model | THD is already 2.27 % against 5 % (SR-07), so skew only needs to be bounded, not designed. A multi-slice model would multiply the FEMM run time by the number of slices for a result that changes no decision |
+| D20 | Screen the base-frame redesign with the analytic design and the base FEMM calibration | A full FEMM run per variant (about 90 min each) | The screen tells which variant deserves the FEMM run. Only one variant meets SR-05, so only that one needs it (OPEN_ITEMS.md) |
 
 ## 13. References
 
 - **[W]** C. S. Wasson, *System Engineering Analysis, Design, and Development: Concepts, Principles, and Practices*, 2nd ed., Wiley, 2016. Chapters 4–7, 13, 19–22, 26–28, 31–34.
 - **[S1]** IEEE Std 421.5-2016. Read through public implementations:
-  - AC8B: CIM ExcIEEEAC8B, https://acs.pages.rwth-aachen.de/public/cim/cimpy/cimpy.cgmes_v2_4_15.ExcIEEEAC8B.html
-  - AC8C, switch SW1: MathWorks, https://www.mathworks.com/help/sps/ref/smac8c.html
-  - IN, FEX: GridKit EXAC1, https://gridkit.readthedocs.io/en/latest/GridKit/Model/PhasorDynamics/Exciter/EXAC1/README.html
+    - AC8B: CIM ExcIEEEAC8B, https://acs.pages.rwth-aachen.de/public/cim/cimpy/cimpy.cgmes_v2_4_15.ExcIEEEAC8B.html
+    - AC8C, switch SW1: MathWorks, https://www.mathworks.com/help/sps/ref/smac8c.html
+    - IN, FEX: GridKit EXAC1, https://gridkit.readthedocs.io/en/latest/GridKit/Model/PhasorDynamics/Exciter/EXAC1/README.html
 - **[S2]** ISO 8528-5:2018. Contents (clause 15) and definitions 3.32–3.33 from the public sample, https://cdn.standards.iteh.ai/samples/71009/8a656586f1e44760a70afec399718590/ISO-8528-5-2018.pdf
 - **[S3]** ISO 8528-3:2020 (Annex A.3) and ISO 8528-3:1993 (8.8 tolerance band), public samples at cdn.standards.iteh.ai (samples 77444, 15759).
 - **[S4]** IEC 60034-1:2022 contents, clause 9.11 "THD for synchronous machines" (public preview, webstore.iec.ch / iteh sample 103428).

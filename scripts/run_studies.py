@@ -15,6 +15,7 @@ from bta.build import load_plant
 from bta.dynamics import GenParams
 from bta.rectifier import RectParams, signature, simulate
 from bta.scenarios import Config, block_load, metrics, motor_start, T_EV
+from bta.design import Design, load_machine
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -76,13 +77,15 @@ def dip_budget(cfg, lim):
 def sensitivity(cfg, lim):
     base = run_metrics(cfg, lim)
     g = cfg.gen
+    # End ring (D18): the base already divides the FEMM damper time constants by k_ring. lo = ring of half the
+    # cross-section (k = 1 + 2 (k_ring - 1)); hi = ideal ring as in the 2-D model (k = 1).
+    kr = Design(load_machine()).run()["k_ring"]
     cases = {
         "H 0.5/1.2 s (gen set)": ("gen", "h", 0.5, 1.2),
         "X'd -/+20 %": ("genk", "xdp", 0.8, 1.2),
         "X''d -/+20 %": ("genk", "xdpp", 0.8, 1.2),
         "T'do -/+20 %": ("genk", "tdo_p", 0.8, 1.2),
-        # FEMM end rings are ideal; real ring resistance only shortens the damper time constants (lo = half)
-        "T''do, T''qo x0.5/x1 (end-ring R)": ("genks", ("tdo_pp", "tqo_pp"), 0.5, 1.0),
+        "End ring: half area / ideal (T''do, T''qo)": ("genks", ("tdo_pp", "tqo_pp"), kr / (2 * kr - 1), kr),
         "Exciter TE 0.15/0.40 s": ("exc", "te", 0.15, 0.40),
         "Rectifier KC 0.08/0.25": ("exc", "kc", 0.08, 0.25),
         "Ceiling VRMAX 10/18": ("exc", "vrmax", 10.0, 18.0),

@@ -1,15 +1,11 @@
 # Open items
 
-## Publishing (needs the user's approval)
+## Publishing
 
-The repository is complete and committed locally as one commit on `main`. It was deliberately not published overnight and waits for the owner's approval. The CI steps were run locally from a fresh clone: 14 tests passed, the FEMM re-reduction reproduced `results/params_femm.json`, and the quick trade-study checks passed. To publish, run from this folder:
-
-```bash
-gh repo create chad416/alternator-transient-performance --public --description "Brushless LV alternator transient performance vs ISO 8528-5 G3: FEMM field model, dq dynamics with IEEE 421.5 AC8-type excitation, trade study, FMEA (systems-engineering dossier)" --source . --remote origin
-```
+The first version (commit `6570b06`) is public at https://github.com/chad416/alternator-transient-performance, and its GitHub Actions run passed. The next commit (end-ring referral D18, skew D19, redesign screen D20, PDF fixes) passed the same steps from a fresh local clone and is ready to push. The repository topics are not set yet. From this folder:
 
 ```bash
-git push -u origin main
+git push origin main
 ```
 
 ```bash
@@ -21,9 +17,13 @@ gh run watch --repo chad416/alternator-transient-performance
 ```
 
 ## Engineering items still open
-- **THF / TIF not computed.** The weighting tables could not be verified (DOSSIER D13). THD is computed.
-- **No skew in the 2-D FEMM model.** The slot harmonics (23rd/25th) are therefore conservative.
-- **End-ring resistance.** Damper end rings are ideal in FEMM. Halving T''do and T''qo, as a stand-in for real ring resistance, moves the SR-01 dip from −14.68 % to −15.05 %. The next model step is the end-ring impedance in FEMM (or a measured T''d).
-- **No base-frame redesign for lower X'd yet.** It is recommended as an extra alternative (DOSSIER §8.5, item 3) but not modelled.
+- **FEMM run of the redesign variant.** The redesign screen (DOSSIER §8.6) finds that only an 8 mm air gap with 50 mm slots meets SR-05, by 0.1 points. That geometry needs its own FEMM run (about 90 min), a field coil that fits between the poles for 28 % more field current (D8), and a resized exciter. Only then can it be scored against A5.
+- **Measured T''d.** The SR-01 pass (0.05 points) depends on the end-ring resistance, which is referred analytically (D18). A sudden-short-circuit test (IEC 60034-4-1) is the first test to run.
 - **ISO 8528-5 and IEC 60034-1/-4-1 values were read through public previews and manufacturer white papers.** Check them against purchased copies before any external use.
 - **Engine model is generic.** The engine-speed column of the dip budget is a sensitivity, not a validated prediction.
+
+## Closed on 10 Nov 2026
+- **End-ring resistance:** referred to the FEMM damper (D18) and now part of every result.
+- **Skew:** bounded as a what-if on the FEMM harmonics (D19). A one-slot-pitch skew lowers THD from 2.27 % to 2.02 %, so SR-07 does not need it.
+- **THF:** IEC 60034-1 clause 9.11 now specifies THD for synchronous machines [S4]; THD is computed (D13).
+- **Base-frame redesign:** screened (DOSSIER §8.6, D20). The FEMM verification of the one passing variant is the open item above.

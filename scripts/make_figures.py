@@ -69,7 +69,8 @@ def fig_section():
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
     ax.grid(False)
-    ax.set_title("One pole pitch of the reference machine (4 poles, 48 slots, 2/3 pitch, 6 damper bars)", fontsize=9)
+    ax.set_title(f"One pole pitch of the reference machine (4 poles, 48 slots, 2/3 pitch, "
+                 f"{m['rotor']['damper']['bars_per_pole']} damper bars)", fontsize=9)
     save(fig, "cross_section.png")
 
 
@@ -104,7 +105,7 @@ def fig_bl(aoa, alts, lim):
     ax.set_xlabel("Time after load application (s)")
     ax.set_ylabel("Terminal voltage (% of rated)")
     ax.set_title("SR-01/02: 0→100 % rated kVA at 0.8 PF, constant speed", fontsize=9)
-    ax.legend(fontsize=7, loc="lower right")
+    ax.legend(fontsize=7, loc="lower right", bbox_to_anchor=(1.0, 0.07), frameon=True, facecolor="#fcfcfb", edgecolor="none", framealpha=1)     # above the dip-limit line
     save(fig, "block_load.png")
 
 
@@ -118,9 +119,9 @@ def fig_motor(aoa, alts, lim):
         a1.plot(r["t"] - T_EV, r["vt"] * 100, color=C[jj], label=f"{key} {aoa['results'][key]['name']}")
         a2.plot(r["t"] - T_EV, r["wm"], color=C[jj])
     a1.axhline(100 + lim["du_motor_start_pct"], color="#e34948", lw=1, ls="--")
-    a1.text(3.9, 100 + lim["du_motor_start_pct"] + 0.8, "practice limit −20 %", ha="right", fontsize=8, color=INK2)
+    a1.text(1.0, 100 + lim["du_motor_start_pct"] + 0.8, "practice limit −20 %", ha="left", fontsize=8, color=INK2)
     a1.set_ylabel("Voltage (%)")
-    a1.legend(fontsize=7, loc="lower right")
+    a1.legend(fontsize=7, loc="lower right", bbox_to_anchor=(1.0, 0.15))    # above the limit line
     a2.set_ylabel("Motor speed (pu)")
     a2.set_xlabel("Time after DOL start of 132 kW pump motor (s)")
     a1.set_title("SR-05: direct-on-line motor start", fontsize=9)
@@ -185,7 +186,8 @@ def fig_aoa(aoa):
     a1.set_xticks(x, keys)
     a1.set_ylabel("Weighted score (of 100)")
     a1.set_title("Normalized weighted-sum scores", fontsize=9)
-    a1.legend(fontsize=7, loc="upper left")
+    a1.set_ylim(0, 95)
+    a1.legend(fontsize=7, loc="upper left", ncol=2)
     ws = aoa["weight_sensitivity_win_share"]
     a2.barh(keys[::-1], [ws[k] * 100 for k in keys[::-1]], color=C[0])
     a2.set_xlabel("Share of 5000 weight sets won (%)")

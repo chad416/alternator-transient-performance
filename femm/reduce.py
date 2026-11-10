@@ -87,6 +87,16 @@ def main():
     # ---- waveform
     wv = waveform(read("wave_if1.00.csv"), o)
     out["waveform"] = {k: v for k, v in wv.items() if k not in ("theta", "e_line_t")}
+    # What-if: stator skewed by one slot pitch (D19). The 2-D model has no skew; the classical skew factor
+    # k_sk(n) = sin(n g/2) / (n g/2), g = slot pitch in electrical radians, is applied to each harmonic of the
+    # line EMF (Pyrhönen [T1] ch. 2). Skew also lowers the fundamental by k_sk(1).
+    g = 2 * math.pi * o["p"] / m["stator"]["slots"]
+    ksk = {n: math.sin(n * g / 2) / (n * g / 2) for n in wv["harm_line_pct"]}
+    hs = {n: v * abs(ksk[n]) / ksk[1] for n, v in wv["harm_line_pct"].items()}
+    out["waveform"]["skew_one_slot"] = {
+        "k_sk1": ksk[1], "harm_line_pct": hs,
+        "thd_line": math.sqrt(sum(v ** 2 for n, v in hs.items() if n > 1)) / 100,
+        "thd_line_unskewed_same_harmonics": math.sqrt(sum(v ** 2 for n, v in wv["harm_line_pct"].items() if n > 1)) / 100}
     k1 = wv["psi1_over_psi_peak"]
     # ---- OCC
     oc = read("occ.csv")
@@ -157,8 +167,15 @@ def main():
                    "Ldfit_re": Ld_fit.real.tolist(), "Ldfit_im": Ld_fit.imag.tolist(),
                    "Lcomb_re": L_comb.real.tolist(), "Lcomb_im": L_comb.imag.tolist(),
                    "fq": fr[mq].tolist(), "Lq_re": L[mq].real.tolist(), "Lq_im": L[mq].imag.tolist()}
-    pu.update({"xdpp": w * ldpp / zb, "xqpp": w * lqpp / zb, "td_p": td_p, "td_pp": td_pp,
-               "tdo_pp": tdo_pp, "tqo_pp": float(tqb), "xdpp_field_open": w * ldpp_open / zb})
+    # End rings (decision D18). The FEMM bars are shorted by ideal rings (D17), so the fitted damper resistances are
+    # bar-only. The real ring adds the segment resistance referred to a bar, the same cage formula as the analytic
+    # design (bta/design.py damper()): R_eq = R_bar + R_seg / (2 sin^2(alpha/2)). It scales the damper resistance by
+    # k_ring and leaves the subtransient reactances unchanged, so every damper time constant is divided by k_ring.
+    k_ring = o["k_ring"]
+    out["end_ring"] = {"k_ring": k_ring, "end_ring_area_mm2": m["rotor"]["damper"]["end_ring_area_mm2"],
+                       "ideal_ring": {"tdo_pp": tdo_pp, "td_pp": td_pp, "tqo_pp": float(tqb), "tq_pp": float(tqa)}}
+    pu.update({"xdpp": w * ldpp / zb, "xqpp": w * lqpp / zb, "td_p": td_p, "td_pp": td_pp / k_ring,
+               "tdo_pp": tdo_pp / k_ring, "tqo_pp": float(tqb) / k_ring, "xdpp_field_open": w * ldpp_open / zb})
     out["pu"] = pu
     out["analytic_pu"] = o["pu"]
     (ROOT / "results" / "params_femm.json").write_text(json.dumps(out, indent=1, default=float))
