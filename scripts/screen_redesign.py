@@ -16,7 +16,6 @@ This is an L1 screen, not a FEMM-verified design.
 
     python -m scripts.screen_redesign
 """
-import copy
 import json
 import math
 from dataclasses import replace
@@ -24,7 +23,7 @@ from pathlib import Path
 
 from bta.aoa import load_alternatives
 from bta.build import gen_params, load_plant
-from bta.design import Design, load_machine
+from bta.design import Design, load_machine, machine_variant
 from scripts.run_studies import cfg_of, run_metrics
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,14 +31,7 @@ CAL = ("xd", "xq", "xl", "xdp", "xdpp", "xqpp", "tdo_p", "tdo_pp", "tqo_pp")
 
 
 def variant(gap_mm: float, slot_depth_mm: float | None = None) -> dict:
-    m = copy.deepcopy(load_machine())
-    m["rotor"]["air_gap_min"] = gap_mm / 1000
-    if slot_depth_mm is not None:
-        s = m["stator"]
-        area = s["slot_width"] * s["slot_depth"]
-        s["slot_depth"] = slot_depth_mm / 1000
-        s["slot_width"] = area / s["slot_depth"]          # same slot area, so the same copper and current density
-    return m
+    return machine_variant(gap_mm, slot_depth_mm)
 
 
 def field_current_rated(o: dict) -> float:

@@ -149,6 +149,26 @@ def t_redesign(rd):
     return "\n".join(rows)
 
 
+def t_redesign_femm(rv):
+    if not rv:
+        return "_FEMM run of the redesign variant not reduced._"
+    sc, pv, pb = rv["screen_estimate"], rv["pu_femm"], rv["pu_base_femm"]
+    rows = ["| Quantity | Base FEMM (4 mm, 58 mm) | Variant, L1 screen | Variant, FEMM | Limit |", "|---|---|---|---|---|",
+            f"| Xd (pu) | {f(pb['xd'])} | {f(sc['xd'])} | {f(pv['xd'])} | — |",
+            f"| X'd (pu) | {f(pb['xdp'],3)} | {f(sc['xdp'],3)} | {f(pv['xdp'],3)} | ≤ 0.207 (SR-05, shunt) |",
+            f"| X''d (pu) | {f(pb['xdpp'],3)} | {f(sc['xdpp'],3)} | {f(pv['xdpp'],3)} | — |",
+            f"| T'do (s) | {f(pb['tdo_p'])} | — | {f(pv['tdo_p'])} | — |",
+            f"| T''d (ms) | {f(1000*pb['td_pp'],1)} | — | {f(1000*pv['td_pp'],1)} | — |",
+            f"| No-load field current (A) | {f(rv['if0_base_A'],1)} | — | {f(rv['if0_A'],1)} | — |",
+            f"| Rated field current vs base | ×1.00 | ×{f(sc['if_rated_rel'])} | ×{f(rv['if_rated_rel'])} | — |",
+            f"| Field copper loss vs base (same coil) | ×1.00 | — | ×{f(rv['field_loss_rel'])} | — |",
+            f"| No-load THD, line | {f(100*rv['thd_line_base'])} % | — | {f(100*rv['thd_line'])} % | ≤ 5 % (SR-07) |",
+            f"| SR-01 dip, A1 / A3 | see §8.1 | see table above | {f(rv['A1']['bl_dip'])} / {f(rv['A3']['bl_dip'])} % | ≥ −15 % |",
+            f"| SR-02 recovery, A1 / A3 | see §8.1 | — | {f(rv['A1']['bl_tu'])} / {f(rv['A3']['bl_tu'])} s | ≤ 4 s |",
+            f"| SR-05 132 kW dip, A1 / A3 | see §8.1 | see table above | {f(rv['A1']['ms_dip'],1)} / {f(rv['A3']['ms_dip'],1)} % | ≥ −20 % |"]
+    return "\n".join(rows)
+
+
 def fill(path: Path, tables: dict):
     txt = path.read_text(encoding="utf-8")
     for name, body in tables.items():
@@ -164,11 +184,13 @@ if __name__ == "__main__":
     pf = json.loads(pff.read_text()) if pff.exists() else None
     rdf = ROOT / "results" / f"redesign_screen_{src}.json"
     rd = json.loads(rdf.read_text()) if rdf.exists() else None
+    rvf = ROOT / "results" / "redesign_femm_verify.json"
+    rv = json.loads(rvf.read_text()) if rvf.exists() else None
     from bta.design import Design, load_machine
     an = Design(load_machine()).run()["pu"]
     tables = {"params": t_params(pf["pu"] if pf else None, an), "aoa": t_aoa(aoa), "gates": t_gates(aoa),
               "scores": t_scores(aoa), "budget": t_budget(st), "sens": t_sens(st), "xd": t_xd(st),
-              "diode": t_diode(st), "ds": t_ds(st), "femm": t_femm(pf), "redesign": t_redesign(rd)}
+              "diode": t_diode(st), "ds": t_ds(st), "femm": t_femm(pf), "redesign": t_redesign(rd), "redesign_femm": t_redesign_femm(rv)}
     for doc in ("DOSSIER.md", "README.md"):
         p = ROOT / doc
         if p.exists():

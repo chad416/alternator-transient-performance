@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import csv
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -31,10 +32,29 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from bta.design import Design, load_machine  # noqa: E402
+from bta.design import Design, load_machine, machine_variant  # noqa: E402
 from bta.geometry import build_section  # noqa: E402
 
-OUT = ROOT / "femm" / "out"
+# BTA_VARIANT="8,50" runs the redesign variant (air gap 8 mm, slot depth 50 mm at the same slot area; DOSSIER §8.6)
+# into its own folder, so the base-design results are never overwritten.
+VARIANT = os.environ.get("BTA_VARIANT")
+
+
+def machine_for_run() -> dict:
+    if not VARIANT:
+        return load_machine()
+    gap, depth = (float(x) for x in VARIANT.split(","))
+    return machine_variant(gap, depth)
+
+
+def out_dir() -> Path:
+    if not VARIANT:
+        return ROOT / "femm" / "out"
+    gap, depth = (float(x) for x in VARIANT.split(","))
+    return ROOT / "femm" / f"out_redesign_g{gap:g}_s{depth:g}"
+
+
+OUT = out_dir()
 FEM = OUT / "model.fem"
 # "<None>": every bar is shorted at infinity (J = -j w sigma A, no voltage term). Under the anti-periodic pole
 # symmetry an ideal continuous end ring forces the common bar voltage to zero, so this is the ideal-ring cage for
@@ -50,7 +70,7 @@ def _femm():
 
 class Model:
     def __init__(self, m: dict | None = None):
-        self.m = m or load_machine()
+        self.m = m or machine_for_run()
         self.sec = build_section(self.m)
         self.d = Design(self.m)
         self.o = self.d.run()

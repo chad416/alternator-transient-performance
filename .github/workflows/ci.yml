@@ -14,6 +14,7 @@ jobs:
       - name: Re-reduce the cached FEMM results (FEMM itself is Windows-only and is not run in CI)
         run: |
           if [ -f femm/out/occ.csv ]; then python femm/reduce.py; else echo "no cached FEMM results"; fi
+          if [ -f femm/out_redesign_g8_s50/occ.csv ]; then BTA_VARIANT=8,50 python femm/reduce.py; fi
       - name: Quick trade-study run and checks on its output
         run: |
           python -m scripts.run_aoa --quick

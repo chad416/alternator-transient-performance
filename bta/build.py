@@ -17,10 +17,11 @@ def load_plant(path: Path | None = None) -> dict:
         return yaml.safe_load(f)
 
 
-def gen_params(source: str = "auto", machine: dict | None = None) -> tuple[GenParams, dict]:
-    """Alternator parameters. source: 'analytic', 'femm' (results/params_femm.json) or 'auto' (FEMM if present)."""
+def gen_params(source: str = "auto", machine: dict | None = None, femm_file: Path | None = None) -> tuple[GenParams, dict]:
+    """Alternator parameters. source: 'analytic', 'femm' (results/params_femm.json, or femm_file) or 'auto'
+    (FEMM if present)."""
     m = machine or load_machine()
-    femm_file = ROOT / "results" / "params_femm.json"
+    femm_file = femm_file or ROOT / "results" / "params_femm.json"
     if source == "femm" or (source == "auto" and femm_file.exists()):
         d = json.loads(femm_file.read_text())
         pu = d["pu"]

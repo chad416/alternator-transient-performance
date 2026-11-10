@@ -20,8 +20,8 @@ The full report is in **[DOSSIER.md](DOSSIER.md)** (also as [DOSSIER.pdf](DOSSIE
 
 The deciding parameter is **X'd**: 0.256 pu, against the 0.207 pu the motor start needs. The AVR, exciter and PMG move
 the first dip by at most 0.3 points; 12.7 of the 14.95 points are already there at t = 0⁺. Only the next frame with a
-PMG meets every requirement. A base-frame redesign (8 mm air gap, shallower slots) reaches the motor start by
-0.1 points at +28 % field current. The dossier recommends challenging the motor requirement first. One open rotating
+PMG meets every requirement. A base-frame redesign (8 mm air gap, shallower slots) reaches the motor start: its own
+FEMM run gives X'd = 0.199 pu and −18.7 %, at +31 % field current. The dossier recommends challenging the motor requirement first. One open rotating
 diode is enough to break the dip limit without any alarm; the study gives its signature on the stationary side.
 
 ![Block load](docs/img/block_load.png)
@@ -61,12 +61,14 @@ python -m scripts.run_aoa --femm          # trade study on FEMM parameters
 python -m scripts.run_studies --femm      # dip budget, sensitivity, X'd sweep, diode FMEA
 python -m scripts.check_a3_ceiling        # AVR ceiling the PMG option needs for 3 pu fault current
 python -m scripts.screen_redesign         # base-frame redesign screen for a lower X'd (DOSSIER §8.6)
+python -m scripts.verify_redesign_femm    # FEMM-verified redesign variant through SR-01/02/05 (DOSSIER §8.6, D21)
 python -m scripts.make_figures --femm
 python -m scripts.make_tables femm        # writes the tables into DOSSIER.md and README.md
 ```
 
 **FEMM studies** (Windows, FEMM 4.2 and `pyfemm`): `python femm/femm_model.py occ wave ldq field ssfr`, then
-`python femm/reduce.py`. CI does not run FEMM. It re-reduces the cached CSVs in `femm/out/` and re-runs everything
+`python femm/reduce.py`. With `BTA_VARIANT=8,50` both scripts run the redesign variant into
+`femm/out_redesign_g8_s50/`. CI does not run FEMM. It re-reduces the cached CSVs in `femm/out/` and re-runs everything
 else.
 
 ## Assumptions and limits

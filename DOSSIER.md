@@ -19,7 +19,7 @@ six "shalls":
 the motor start at most 0.207 pu (shunt excitation). The AVR, a larger exciter and a PMG change the recovery and the
 fault current; they move the first dip by no more than 0.3 percentage points. Only the next frame meets every shall,
 and only together with a PMG (A5). A redesign of the base frame (§8.6) reaches the motor start only with an 8 mm air
-gap and shallower slots, and that costs 28 % more field current.
+gap and shallower slots: its FEMM run gives X'd = 0.199 pu and a −18.7 % motor-start dip, at 31 % more field current.
 
 **How to read the evidence.** Every engineering value carries a tag:
 - **[S]** sourced, with a reference in §12;
@@ -36,7 +36,7 @@ written out and derived in `docs/design_notes.md` instead of being cited by numb
 ## 0. Findings
 
 Numbers are from `results/aoa_femm.json`, `results/studies_femm.json`, `results/params_femm.json`,
-`results/a3_ceiling_femm.json` and `results/redesign_screen_femm.json`. All are on FEMM-derived parameters, with the
+`results/a3_ceiling_femm.json`, `results/redesign_screen_femm.json` and `results/redesign_femm_verify.json`. All are on FEMM-derived parameters, with the
 end-ring resistance referred to the bars (D18).
 
 1. **FEMM and the analytic design agree within 8 % on everything except the damper.** Xd −8 %, Xq −8 %, X'd −3 %,
@@ -78,11 +78,13 @@ end-ring resistance referred to the bars (D18).
 10. **Waveform.** The no-load line-to-line THD is 2.27 % with an unskewed stator (SR-07: 5 %). The largest
     harmonics are the 5th (1.94 %) and the 7th (0.99 %); the 2/3 pitch removes the triplens. A stator skew of one
     slot pitch would lower the THD to 2.02 % at a 0.3 % loss of fundamental (D19), so skew is not needed for SR-07.
-11. **A base-frame redesign can reach the motor start, but only just and at a field-current price** (§8.6, an L1
-    screen calibrated to FEMM). An 8 mm air gap (instead of 4 mm) with shallower stator slots of the same area gives
-    X'd = 0.206 pu. The 132 kW start then dips −19.9 %, and the SR-01 dip improves by 2.6 points. The rated field
-    current rises by 28 % and the field copper loss by a factor of 1.64 with the same coil. The field coil already
-    fills the space between the poles (D8), so the field winding and the exciter would have to be redesigned.
+11. **A base-frame redesign reaches the motor start, at a field-current price, and FEMM confirms it** (§8.6, D20,
+    D21). The L1 screen picked one variant: an 8 mm air gap (instead of 4 mm) with shallower stator slots of the same
+    area. Its own FEMM run gives X'd = 0.199 pu (screen: 0.206) and X''d = 0.169 pu (screen: 0.187). With those
+    parameters and no calibration factor, the 132 kW start dips −18.7 % (A1, shunt), 1.3 points inside SR-05, and
+    the block-load dip is −11.83 %. The price is confirmed too: the rated field current rises by 31 % (screen: 28 %)
+    and the field copper loss by a factor of 1.70 with the same coil. The field coil already fills the space between
+    the poles (D8), so the field winding and the exciter must be redesigned for this variant.
 
 ---
 
@@ -475,10 +477,10 @@ These are recommendations to the decision maker, not decisions (Principle 32.9).
    retuned AVR, at a cost index of 1.06. SR-06 is then met with a 4.4 % higher AVR ceiling. This saves about a fifth
    of the alternator cost index against A5. The price is an SR-01 margin of only 0.2 points, so T''d and X'd must be
    confirmed by test (§10.3) before this choice is final.
-3. **Treat a base-frame redesign as a real but tight alternative** (§8.6). Only the 8 mm air gap with shallower slots
-   meets SR-05, by 0.1 points, and it needs 28 % more field current. Before it can be scored against A5 it needs
-   a FEMM run of that geometry, a new field coil that fits (D8) and a resized exciter. It was not in the charter and
-   is not scored.
+3. **Treat a base-frame redesign as a real alternative** (§8.6). Only the 8 mm air gap with shallower slots meets
+   SR-05. In the L1 screen it passed by 0.1 points; its own FEMM run (D21) gives −18.7 %, 1.3 points inside the limit.
+   It needs 31 % more field current and 1.70× the field copper loss, so a new field coil that fits (D8) and a
+   resized exciter are part of the change. It was not in the charter and is not scored.
 4. **In every case**, retune the AVR with the DR-03 rule, since the textbook tuning fails SR-01 and SR-02. Also fit a
    rotating-diode monitor (1×/6× f_ex): on the base frame a single open diode is enough to break SR-01 without any
    alarm.
@@ -510,8 +512,36 @@ Reading the table:
 - The air gap lowers X'd by lowering the armature reaction. It raises the no-load field current almost in
   proportion to the gap. The rated-load field current rises less (×1.28 at 8 mm), because Xd falls at the same time.
 - Shallower slots lower the slot leakage, and with it Xl, X'd and X''d.
-- Only the 8 mm, 50 mm variant meets SR-05 (−19.9 %). It is an L1 screen, and FEMM verification of that geometry is
-  the next step (OPEN_ITEMS.md).
+- Only the 8 mm, 50 mm variant meets SR-05 (−19.9 %) in the screen.
+
+**FEMM verification of the 8 mm, 50 mm variant (generated, decision D21).** The variant was solved in FEMM with the
+same five studies as the base design (`BTA_VARIANT=8,50 python femm/femm_model.py ...`, 55 min; results in
+`femm/out_redesign_g8_s50/` and `results/params_femm_redesign_g8_s50.json`). `scripts/verify_redesign_femm.py`
+then runs its FEMM parameters, with no calibration factor, through SR-01, SR-02 and SR-05 with the A1 and A3 gains:
+
+<!-- TABLE:redesign_femm -->
+| Quantity | Base FEMM (4 mm, 58 mm) | Variant, L1 screen | Variant, FEMM | Limit |
+|---|---|---|---|---|
+| Xd (pu) | 2.20 | 1.17 | 1.16 | — |
+| X'd (pu) | 0.256 | 0.206 | 0.199 | ≤ 0.207 (SR-05, shunt) |
+| X''d (pu) | 0.207 | 0.187 | 0.169 | — |
+| T'do (s) | 1.82 | — | 0.97 | — |
+| T''d (ms) | 19.9 | — | 16.5 | — |
+| No-load field current (A) | 28.8 | — | 55.3 | — |
+| Rated field current vs base | ×1.00 | ×1.28 | ×1.31 | — |
+| Field copper loss vs base (same coil) | ×1.00 | — | ×1.70 | — |
+| No-load THD, line | 2.27 % | — | 1.57 % | ≤ 5 % (SR-07) |
+| SR-01 dip, A1 / A3 | see §8.1 | see table above | -11.83 / -11.77 % | ≥ −15 % |
+| SR-02 recovery, A1 / A3 | see §8.1 | — | 0.75 / 1.66 s | ≤ 4 s |
+| SR-05 132 kW dip, A1 / A3 | see §8.1 | see table above | -18.7 / -18.7 % | ≥ −20 % |
+<!-- /TABLE -->
+
+- FEMM gives a lower X'd and X''d than the screen. The screen carried the base design's FEMM/analytic ratios over to
+  the variant; with the larger gap the leakage shares change, so the ratios are not constant.
+- The motor start passes by 1.3 points instead of 0.1. The verdict of the screen holds, with a larger margin.
+- The field-current price is confirmed (×1.31 against ×1.28). The dynamic model works in per-unit field quantities,
+  so the result assumes an exciter resized to the new field base.
+- The THD falls from 2.27 % to 1.57 %: the larger gap filters the slot harmonics.
 
 ## 9. Reliability: FMEA ([W] ch. 34)
 
@@ -636,7 +666,8 @@ generic [A]. Its effect (§6.2, last column) is therefore a sensitivity, not a v
 - 2-D FEMM without skew or end effects. The end-winding leakage and the end-ring resistance (D18) come from the
   analytic model. Skew is applied to the FEMM harmonics only, as a what-if (D19).
 - The end-ring referral uses the continuous-cage formula. §8.4 varies the ring area: half the area gives −15.05 %.
-- The redesign screen (§8.6) is L1 with the FEMM calibration of the base design, not a FEMM solution of each variant.
+- The redesign screen (§8.6) is L1 with the FEMM calibration of the base design. Only the one variant that passed it
+  was solved in FEMM (D21).
 - RMS dynamics only, so no first-cycle offset.
 - One design point.
 - The textbook equations [T1]–[T5] are derived in `docs/design_notes.md` but their equation numbers were not re-checked against the books.
@@ -664,7 +695,8 @@ generic [A]. Its effect (§6.2, last column) is therefore a sensitivity, not a v
 | D17 | 9 damper bars per pole (8 pitches of 0.85 slot pitch = 83 % of the pole arc), each bar shorted by an ideal continuous end ring (FEMM block with no circuit) | 6 bars (52 % of the arc); all bars of the pole in one zero-net-current parallel circuit | The full FEMM run with 6 bars gave X''d = 0.242 pu against X'd = 0.257 pu and X''q = 0.90 pu: the outer half of the pole face had no damper, while the analytic model treats the cage as spread over the whole arc. The zero-net constraint is also wrong for the q axis: there the bar currents of one pole have the same sign and return through the ring to the next pole. Under anti-periodic symmetry an ideal continuous ring forces the common bar voltage to zero, which is exactly a no-circuit block (J = −jωσA). A quick check at 100 Hz (2-D inductance, `femm/out/damper_check_6v9_bars.txt`): d axis 0.531 → 0.190 mH (6 → 9 bars, same for both connections); q axis 0.388 mH (parallel circuit) vs 0.078 mH (no circuit). The 6-bar results are kept in `femm/out/prelim_6bars_zero_net/` |
 | D18 | End-ring resistance referred to the FEMM damper: every damper time constant divided by k_ring = R_eq / R_bar = 1.49 (400 mm² ring) | Keep the ideal ring and cover the ring only in the sensitivity study | The ideal ring gave T''d = 29.7 ms, outside the 12–19 ms of public data sheets [S7]. The referral R_eq = R_bar + R_seg / (2 sin²(α/2)) is the same formula the analytic design uses (`bta/design.py`, `damper()`), so FEMM and analytic share one end-ring model. The resistance changes no reactance. Result: T''d = 19.9 ms, and the SR-01 margin falls from 0.32 to 0.05 points. The ideal-ring values are kept in `results/params_femm.json` (`end_ring.ideal_ring`) |
 | D19 | Skew as a post-processed what-if on the FEMM harmonics (skew factor sin(nγ/2)/(nγ/2), γ = one slot pitch) | A skewed multi-slice FEMM model | THD is already 2.27 % against 5 % (SR-07), so skew only needs to be bounded, not designed. A multi-slice model would multiply the FEMM run time by the number of slices for a result that changes no decision |
-| D20 | Screen the base-frame redesign with the analytic design and the base FEMM calibration | A full FEMM run per variant (about 90 min each) | The screen tells which variant deserves the FEMM run. Only one variant meets SR-05, so only that one needs it (OPEN_ITEMS.md) |
+| D20 | Screen the base-frame redesign with the analytic design and the base FEMM calibration | A full FEMM run per variant (about 90 min each) | The screen tells which variant deserves the FEMM run. Only one variant meets SR-05, so only that one needs it |
+| D21 | Solve the one passing redesign variant (8 mm, 50 mm) in FEMM with the full study set and run its parameters uncalibrated | Accept the L1 screen | The screen passed SR-05 by 0.1 points, inside its own calibration uncertainty. FEMM gives X'd 0.199 pu and a 1.3-point pass, so the verdict holds on L2 parameters. The variant writes to its own folder (`BTA_VARIANT`), so the base results are untouched |
 
 ## 13. References
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 (2026-11-10)
+- FEMM run of the one redesign variant that passed the screen (8 mm air gap, 50 mm slots), with the full study set (`BTA_VARIANT=8,50`, own output folder). `scripts/verify_redesign_femm.py` runs its parameters uncalibrated through SR-01/02/05: X'd 0.199 pu, 132 kW start −18.7 %, rated field current ×1.31 (decision D21, DOSSIER §8.6).
+- `machine_variant()` moved to `bta/design.py`; `gen_params()` takes a FEMM parameter file.
+
 ## 1.0.0 (2026-11-10)
 - Systems-engineering dossier (Wasson spine): need, ConOps, modes, requirements, architecture, budgets, trade study, M&S, FMEA, V&V. Exported to PDF.
 - Analytic design of the 800 kVA reference machine (`bta/design.py`) and its 2-D section (`bta/geometry.py`).

@@ -8,3 +8,5 @@ PROGRESS.md
 OPEN_ITEMS_private.md
 *_print.html
 results/aoa_quick.json
+femm/out_*/*.fem
+femm/out_*/*.ans

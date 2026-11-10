@@ -15,9 +15,11 @@ from scipy.optimize import least_squares
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from bta.design import Design, load_machine  # noqa: E402
+from bta.design import Design  # noqa: E402
+from femm_model import VARIANT, machine_for_run, out_dir  # noqa: E402  (same folder; path and config helpers only, FEMM is not imported)
 
-OUT = ROOT / "femm" / "out"
+OUT = out_dir()
+PARAMS = ROOT / "results" / ("params_femm.json" if not VARIANT else f"params_femm_{OUT.name.replace('out_', '')}.json")
 
 
 def read(name):
@@ -78,7 +80,7 @@ def fit_ssfr(f, L, L0_guess, axis):
 
 
 def main():
-    m = load_machine()
+    m = machine_for_run()
     des = Design(m)
     o = des.run()
     zb, w, a = o["z_base"], o["omega"], m["stator"]["parallel_paths"]
@@ -178,7 +180,7 @@ def main():
                "tdo_pp": tdo_pp / k_ring, "tqo_pp": float(tqb) / k_ring, "xdpp_field_open": w * ldpp_open / zb})
     out["pu"] = pu
     out["analytic_pu"] = o["pu"]
-    (ROOT / "results" / "params_femm.json").write_text(json.dumps(out, indent=1, default=float))
+    PARAMS.write_text(json.dumps(out, indent=1, default=float))
     print(json.dumps({k: round(v, 4) for k, v in pu.items()}, indent=1))
     print("THD line %.2f %%" % (100 * wv["thd_line"]))
 

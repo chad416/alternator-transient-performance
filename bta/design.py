@@ -26,6 +26,20 @@ def load_machine(path: Path | None = None) -> dict:
         return yaml.safe_load(f)
 
 
+def machine_variant(gap_mm: float, slot_depth_mm: float | None = None, base: dict | None = None) -> dict:
+    """Base machine with another air gap and, optionally, a shallower slot of the same area (same copper, same
+    current density). Used by the redesign screen (DOSSIER §8.6) and by the FEMM run of the redesign variant."""
+    import copy
+    m = copy.deepcopy(base or load_machine())
+    m["rotor"]["air_gap_min"] = gap_mm / 1000
+    if slot_depth_mm is not None:
+        s = m["stator"]
+        area = s["slot_width"] * s["slot_depth"]
+        s["slot_depth"] = slot_depth_mm / 1000
+        s["slot_width"] = area / s["slot_depth"]
+    return m
+
+
 # ---------------------------------------------------------------- winding
 def winding_factor(nu: int, q: int, pitch_ratio: float, skew_slot_frac: float = 0.0, slots_per_pole: int = 12):
     """Distribution, pitch and skew factor of harmonic nu (electrical order)."""
